@@ -174,6 +174,7 @@ exports.handleSwipeRight = function(req, res, next) {
       console.log('removed');
     }
   );
+  // TODO : respond depending on if the other person swiped right on me
 }
 
 exports.handleSwipeLeft = function(req, res, next) {
@@ -197,7 +198,9 @@ exports.handleSwipeLeft = function(req, res, next) {
       console.log('removed');
     }
   );
+  res.json({"status" : "ok"});
 }
+
 exports.getVideo = function(req, res, next) {
   var filePath = __dirname + '/uploads/' + req.params.videoId;
   var stat = fs.statSync(filePath);
@@ -213,6 +216,15 @@ exports.getVideo = function(req, res, next) {
 exports.getCurrent = function(req, res, next) {
   var thisId = req.params.id;
   TurtleUser.findOne({fbUserId : thisId}, function(err, turtle_user) {
+    if (!turtle_user) {
+      console.log('no user found');
+      res.json([]);
+      return;
+    }
+    if (err) {
+      console.log(err);
+      return;
+    }
     console.log(turtle_user.current);
     var size = turtle_user.current.length;
     var names = [];
