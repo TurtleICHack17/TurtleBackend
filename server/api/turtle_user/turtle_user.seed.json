@@ -1,0 +1,19 @@
+[
+	{
+	    "name": "Test User",
+	    "email": "test@test.com",
+      "fb_user_id" : "id A",
+      "gender" : "male",
+      "stack": [],
+      "matches": [],
+      "conversations": []
+  	}, {
+	    "name": "Admin",
+	    "email": "admin@admin.com",
+      "fb_user_id" : "id B",
+      "gender" : "female",
+      "stack": [],
+      "matches": [],
+      "conversations": []
+  	}
+]
