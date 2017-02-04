@@ -1,4 +1,5 @@
 node_modules
 .idea
 /server/config/local.env.js
+/server/api/turtle_user/uploads
 npm-debug.log

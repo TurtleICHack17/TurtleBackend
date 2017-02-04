@@ -1,9 +1,15 @@
 'use strict';
 
+var IP = '129.31.231.107';
+
 var TurtleUser = require('./turtle_user.model');
 var passport = require('passport');
 var config = require('../../config/environment');
 var jwt = require('jsonwebtoken');
+var fs = require('fs');
+var path = require('path');
+
+var emotions = require('./emotions.js');
 
 var validationError = function(res, err) {
   return res.status(422).json(err);
@@ -92,6 +98,35 @@ exports.me = function(req, res, next) {
     if (!turtle_user) return res.status(401).send('Unauthorized');
     res.json(turtle_user);
   });
+};
+
+exports.handleVideo = function(req, res, next) {
+  var wstream = fs.createWriteStream('temp.mp4');
+  //wsteam.write();
+  console.log(req);
+  var path = req.file.path;
+  var idFrom = req.params.idFrom;
+  var idTo = req.params.idTo;
+  // TODO : save (id, path)
+  res.json({
+    "status" : "ok"
+  });
+};
+
+exports.getVideo = function(req, res, next) {
+  var filePath = __dirname + '/uploads/' + req.params.videoId;
+  var stat = fs.statSync(filePath);
+
+  res.writeHead(200, {
+    'Content-Type' : 'video/mp4',
+    'Content-Length' : stat.size
+  });
+  var readStream = fs.createReadStream(filePath);
+  readStream.pipe(res);
+};
+
+exports.getStack = function(req, res, next) {
+  // TODO
 };
 
 /**
