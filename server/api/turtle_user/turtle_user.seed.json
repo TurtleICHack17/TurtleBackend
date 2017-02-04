@@ -2,18 +2,14 @@
 	{
 	    "name": "Test User",
 	    "email": "test@test.com",
-      "fb_user_id" : "id A",
+      "fbUserId" : "id A",
       "gender" : "male",
-      "stack": [],
-      "matches": [],
-      "conversations": []
+      "matches": []
   	}, {
 	    "name": "Admin",
 	    "email": "admin@admin.com",
-      "fb_user_id" : "id B",
+      "fbUserId" : "id B",
       "gender" : "female",
-      "stack": [],
-      "matches": [],
-      "conversations": []
+      "matches": []
   	}
 ]

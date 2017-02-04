@@ -11,6 +11,40 @@ var path = require('path');
 
 var emotions = require('./emotions.js');
 
+////////////////////////////////////////////
+
+// updates current list of considered users
+function updateCurrent(userId) {
+  TurtleUser.findOne({fbUserId : userId}, function(err, thisUser) {
+    if (err) {
+      console.log(err);
+    }
+    console.log('thisUser');
+    console.log(thisUser);
+    TurtleUser.find({}, function(err, otherUsers) {
+      for (var i = 0; i<otherUsers.length; i++) {
+        var otherUser = otherUsers[i];
+        console.log('otherUser');
+        console.log(otherUser);
+        if (thisUser.fbUserId == otherUser.fbUserId) continue;
+        if (thisUser.accepted.indexOf(otherUser.fbUserId) > -1) continue;
+        if (thisUser.declined.indexOf(otherUser.fbUserId) > -1) continue;
+        if (thisUser.current.indexOf(otherUser.fbUserId) > -1) continue;
+        TurtleUser.findByIdAndUpdate(
+            thisUser._id,
+            {$push: {"current": otherUser.fbUserId}},
+            {safe: true, upsert: true},
+            function(err, model) {
+              if (err) console.log(err);
+            }
+        );
+      }
+    });
+  });
+}
+
+////////////////////////////////////////////
+
 var validationError = function(res, err) {
   return res.status(422).json(err);
 };
@@ -31,13 +65,13 @@ exports.index = function(req, res) {
  * Creates a new turtle_user
  */
 exports.create = function (req, res, next) {
+  console.log(req.body);
   var newTurtleUser = new TurtleUser(req.body);
-  newTurtleUser.provider = 'local';
-  newTurtleUser.role = 'turtle_user';
   newTurtleUser.save(function(err, turtle_user) {
     if (err) return validationError(res, err);
-    var token = jwt.sign({_id: turtle_user._id }, config.secrets.session, { expiresInMinutes: 60*5 });
-    res.json({ token: token });
+    //var token = jwt.sign({_id: turtle_user._id }, config.secrets.session, { expiresInMinutes: 60*5 });
+    updateCurrent(turtle_user.fbUserId);
+    res.json({ "status" : "success" });
   });
 };
 
@@ -101,18 +135,69 @@ exports.me = function(req, res, next) {
 };
 
 exports.handleVideo = function(req, res, next) {
-  var wstream = fs.createWriteStream('temp.mp4');
+  //var wstream = fs.createWriteStream('temp.mp4');
   //wsteam.write();
   console.log(req);
+  if (!req.file) {
+    res.json({
+      "status" : "error"
+    });
+    return;
+  }
   var path = req.file.path;
-  var idFrom = req.params.idFrom;
-  var idTo = req.params.idTo;
+  //var idFrom = req.params.idFrom;
+  //var idTo = req.params.idTo;
   // TODO : save (id, path)
   res.json({
     "status" : "ok"
   });
 };
 
+exports.handleSwipeRight = function(req, res, next) {
+  var otherUserId = req.params.otherId;
+  var thisUserId = req.params.thisId;
+  TurtleUser.update(
+    {fbUserId : thisUserId},
+    {"$push" : {"accepted" : otherUserId}},
+    {safe: true, upsert: true},
+    function(err, model) {
+      if (err) console.log(err);
+      console.log('added');
+    }
+  );
+  TurtleUser.update(
+    {fbUserId : thisUserId},
+    {"$pull" : {"current" : otherUserId}},
+    {safe: true, upsert: true},
+    function(err, model) {
+      if (err) console.log(err);
+      console.log('removed');
+    }
+  );
+}
+
+exports.handleSwipeLeft = function(req, res, next) {
+  var otherUserId = req.params.otherId;
+  var thisUserId = req.params.thisId;
+  TurtleUser.update(
+    {fbUserId : thisUserId},
+    {"$push" : {"declined" : otherUserId}},
+    {safe: true, upsert: true},
+    function(err, model) {
+      if (err) console.log(err);
+      console.log('added');
+    }
+  );
+  TurtleUser.update(
+    {fbUserId : thisUserId},
+    {"$pull" : {"current" : otherUserId}},
+    {safe: true, upsert: true},
+    function(err, model) {
+      if (err) console.log(err);
+      console.log('removed');
+    }
+  );
+}
 exports.getVideo = function(req, res, next) {
   var filePath = __dirname + '/uploads/' + req.params.videoId;
   var stat = fs.statSync(filePath);
@@ -125,8 +210,25 @@ exports.getVideo = function(req, res, next) {
   readStream.pipe(res);
 };
 
-exports.getStack = function(req, res, next) {
-  // TODO
+exports.getCurrent = function(req, res, next) {
+  var thisId = req.params.id;
+  TurtleUser.findOne({fbUserId : thisId}, function(err, turtle_user) {
+    console.log(turtle_user.current);
+    var size = turtle_user.current.length;
+    var names = [];
+    for (var i = 0; i < size; i++) {
+      var userId = turtle_user.current[i];
+      TurtleUser.findOne({fbUserId : userId}, function(err, turtle_user2) {
+        names.push({
+          fbUserId : userId,
+          name : turtle_user2.name
+        });
+        if (names.length == size) {
+          res.json(names);
+        }
+      })
+    }
+  });
 };
 
 /**

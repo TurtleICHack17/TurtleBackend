@@ -19,7 +19,9 @@ router.post('/', controller.create);
 // TODO
 router.post('/:idFrom/video/:idTo', upload.single('myVideoFile'), controller.handleVideo);
 router.get('/video/:videoId', controller.getVideo);
-router.get('/:id/stack', controller.getStack);
+router.get('/:id/current', controller.getCurrent);
+router.get('/:thisId/swipeleft/:otherId', controller.handleSwipeLeft);
+router.get('/:thisId/swiperight/:otherId', controller.handleSwipeRight);
 //router.post('/:id/swiperight', controller.getMatchStack);
 //router.post('/:id/swipeleft', controller.getMatchStack);
 

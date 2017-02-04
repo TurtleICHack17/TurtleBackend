@@ -7,13 +7,12 @@ var crypto = require('crypto');
 var TurtleUserSchema = new Schema({
   name: String,
   email: { type: String, lowercase: true },
-  fb_user_id: String,
-  // TODO : maybe use something like enum
-  gender: String,
-  //    who_swiped, video
-  stack: [(String, String)],
-  matches: [String],
-  conversations: [(String, String)]
+  fbUserId: String,
+  gender: {type : String, default : "male"}, // assume their gender
+  current : {type : [String], default : []},
+  accepted : {type : [String], default : []},
+  declined : {type : [String], default : []},
+  matches: {type : [String], default : []}
 });
 
 /**
@@ -73,14 +72,5 @@ TurtleUserSchema
    */
       next();
   });
-
-TurtleUserSchema.methods = {
-  handleSwipeRight : function() {
-  },
-  handleSwipeLeft : function() {
-  },
-  getStack : function() {
-  }
-};
 
 module.exports = mongoose.model('TurtleUser', TurtleUserSchema);
