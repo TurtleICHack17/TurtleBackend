@@ -49,3 +49,11 @@ exports.callEmotionAPIVideoCheckStatus = function(oid, cb) {
     cb(body);
   });
 };
+
+exports.calculateScore = function(video) {
+  return 0;
+};
+
+exports.handleVideo = function(video) {
+
+};

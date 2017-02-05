@@ -67,12 +67,20 @@ exports.index = function(req, res) {
  */
 exports.create = function (req, res, next) {
   console.log(req.body);
-  var newTurtleUser = new TurtleUser(req.body);
-  newTurtleUser.save(function(err, turtle_user) {
-    if (err) return validationError(res, err);
-    //var token = jwt.sign({_id: turtle_user._id }, config.secrets.session, { expiresInMinutes: 60*5 });
-    updateCurrent(turtle_user.fbUserId);
-    res.json({ "status" : "success" });
+  TurtleUser.findOne({fbUserId : req.body.fbUserId}, function(err, previous_user) {
+    if (!previous_user) {
+      console.log('new user');
+      var newTurtleUser = new TurtleUser(req.body);
+      newTurtleUser.save(function(err, turtle_user) {
+        if (err) return validationError(res, err);
+        //var token = jwt.sign({_id: turtle_user._id }, config.secrets.session, { expiresInMinutes: 60*5 });
+        updateCurrent(turtle_user.fbUserId);
+        res.json({ "status" : "success" });
+      });
+    } else {
+      console.log('existing user');
+      res.json({ "status" : "success" });
+    }
   });
 };
 
@@ -159,6 +167,7 @@ exports.handleVideo = function(req, res, next) {
   newTurtleVideo.save(function(err, turtle_video) {
     console.log('saved video');
     // TODO : call Emotion API
+    emotions.handleVideo(turtle_video);
     res.json({ "status" : "success" });
   });
 };
@@ -182,6 +191,15 @@ exports.handleSwipeRight = function(req, res, next) {
     function(err, model) {
       if (err) console.log(err);
       console.log('removed');
+    }
+  );
+  TurtleUser.update(
+    {fbUserId : otherUserId},
+    {"$push" : {"current" : thisUserId}},
+    {safe: true, upsert: true},
+    function(err, model) {
+      if (err) console.log(err);
+      console.log('added to current');
     }
   );
   console.log(otherUserId);
@@ -268,7 +286,7 @@ exports.getCurrent = function(req, res, next) {
       var userId = turtle_user.current[i];
       TurtleUser.findOne({fbUserId : userId}, function(err, turtle_user2) {
         names.push({
-          fbUserId : userId,
+          fbUserId : turtle_user2.fbUserId,
           name : turtle_user2.name
         });
         if (names.length == size) {
