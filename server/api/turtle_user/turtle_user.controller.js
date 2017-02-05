@@ -3,6 +3,7 @@
 var IP = '129.31.231.107';
 
 var TurtleUser = require('./turtle_user.model');
+var TurtleVideo = require('./turtle_video.model');
 var passport = require('passport');
 var config = require('../../config/environment');
 var jwt = require('jsonwebtoken');
@@ -145,11 +146,20 @@ exports.handleVideo = function(req, res, next) {
     return;
   }
   var path = req.file.path;
-  //var idFrom = req.params.idFrom;
-  //var idTo = req.params.idTo;
-  // TODO : save (id, path)
-  res.json({
-    "status" : "ok"
+  var filename = req.file.filename;
+  var fromId = req.params.fromId;
+  var toId = req.params.toId;
+  console.log(path);
+
+  var newTurtleVideo = new TurtleVideo({
+    "fromId" : fromId,
+    "toId" : toId,
+    "url" : /*IP + ':9000/api/turtle_users/video/' +*/ filename
+  });
+  newTurtleVideo.save(function(err, turtle_video) {
+    console.log('saved video');
+    // TODO : call Emotion API
+    res.json({ "status" : "success" });
   });
 };
 
@@ -174,7 +184,33 @@ exports.handleSwipeRight = function(req, res, next) {
       console.log('removed');
     }
   );
+  console.log(otherUserId);
   // TODO : respond depending on if the other person swiped right on me
+  // if the other person has already swiped on me
+  TurtleUser.findOne({fbUserId : otherUserId}, function(err, turtle_user) {
+    console.log(turtle_user);
+    if (err) {
+      console.log(err);
+      return;
+    }
+    if (turtle_user.accepted.indexOf(thisUserId) > -1) {
+      // the other user swiped right on this user
+      TurtleVideo.findOne({
+        fromId : otherUserId,
+        toId : thisUserId
+      },
+      function(err, turtle_video) {
+        res.json({
+          "needsVideo" : false,
+          "videoUrl" : turtle_video.url 
+        });
+      });
+    } else {
+      res.json({
+        "needsVideo" : true
+      });
+    }
+  });
 }
 
 exports.handleSwipeLeft = function(req, res, next) {

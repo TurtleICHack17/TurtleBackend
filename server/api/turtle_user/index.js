@@ -17,12 +17,10 @@ router.get('/:id', controller.show);
 router.post('/', controller.create);
 
 // TODO
-router.post('/:idFrom/video/:idTo', upload.single('myVideoFile'), controller.handleVideo);
+router.post('/:fromId/video/:toId', upload.single('myVideoFile'), controller.handleVideo);
 router.get('/video/:videoId', controller.getVideo);
 router.get('/:id/current', controller.getCurrent);
 router.post('/:thisId/swipeleft/:otherId', controller.handleSwipeLeft);
 router.post('/:thisId/swiperight/:otherId', controller.handleSwipeRight);
-//router.post('/:id/swiperight', controller.getMatchStack);
-//router.post('/:id/swipeleft', controller.getMatchStack);
 
 module.exports = router;
